@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-10-31",
+  "split_seed": 20261024,
+  "csaw_s": {
+    "development_images": 237,
+    "development_groups": 115,
+    "folds": [
+      {
+        "fold": 1,
+        "train_images": 193,
+        "validation_images": 44,
+        "train_groups": 92,
+        "validation_groups": 23
+      },
+      {
+        "fold": 2,
+        "train_images": 185,
+        "validation_images": 52,
+        "train_groups": 92,
+        "validation_groups": 23
+      },
+      {
+        "fold": 3,
+        "train_images": 194,
+        "validation_images": 43,
+        "train_groups": 92,
+        "validation_groups": 23
+      },
+      {
+        "fold": 4,
+        "train_images": 189,
+        "validation_images": 48,
+        "train_groups": 92,
+        "validation_groups": 23
+      },
+      {
+        "fold": 5,
+        "train_images": 187,
+        "validation_images": 50,
+        "train_groups": 92,
+        "validation_groups": 23
+      }
+    ],
+    "expert_evaluation_images": 26,
+    "expert_evaluation_groups": 23,
+    "excluded_expert_linked_images": 15,
+    "excluded_development_group_ids": [
+      "002",
+      "004",
+      "005",
+      "013",
+      "019",
+      "021",
+      "024",
+      "026"
+    ],
+    "group_linkage_policy": "Preserved registered conservative patient-suffix/source-identity exclusion; not independent clinical linkage verification.",
+    "prior_88_image_assessment_reclassified_as_development": true
+  },
+  "inbreast": {
+    "evaluation_only": true,
+    "cohort_version": "INbreast94_source_BIRADS1_20261029",
+    "evaluation_images": 94,
+    "contour_images": 27,
+    "assumed_negative_images": 67,
+    "filename_group_proxies": 44,
+    "group_proxy_linkage_verified": false,
+    "negative_policy": "67sourceBI-RADS1images without XML. Empty MC references are an explicit evaluation assumption; source dense_negative_valid=false is preserved, not converted into verified pixelwise absence."
+  },
+  "provenance": {
+    "exported_from_existing_registered_membership": true,
+    "resplitting_performed": false,
+    "current_fold_1_registry_membership_matches": true,
+    "image_or_mask_pixels_read": false,
+    "source_metadata_files": [
+      {
+        "path_relative_to_project": "stages/03_segmentation/outputs/dino_u10_expanded_fivefold_20261024/splits.json",
+        "sha256": "eb7975d28af06122665c15743e85adbf8ff72fe71646202e334edc5e0eb0a604"
+      },
+      {
+        "path_relative_to_project": "stages/03_segmentation/outputs/dino_u10_expanded_fivefold_20261024/registration.json",
+        "sha256": "8a55c31d5e019d6fcf95f54880ebdf75fa910c06e1e2b7a307cf760d53dd5341"
+      },
+      {
+        "path_relative_to_project": "stages/03_segmentation/outputs/dino_u10_expanded_fivefold_20261024/folds/fold1/data/registry.json",
+        "sha256": "784fc438d0c489ebbe00082949d3cbf15aebb5f08aa293c53e32f1b6efa054a5"
+      },
+      {
+        "path_relative_to_project": "stages/03_segmentation/outputs/dino_u10_expanded_fivefold_20261024/folds/fold2/data/registry.json",
+        "sha256": "90b006d1d0f9aab73b6544a56c290f59dac90a8d0e42b17230b7f1af64c5e5b5"
+      },
+      {
+        "path_relative_to_project": "stages/03_segmentation/outputs/dino_u10_expanded_fivefold_20261024/folds/fold3/data/registry.json",
+        "sha256": "71350cab4a4c3fbbd0ddec9b48fb34f1ee556d81b44a184ec9292ae3a4511a02"
+      },
+      {
+        "path_relative_to_project": "stages/03_segmentation/outputs/dino_u10_expanded_fivefold_20261024/folds/fold4/data/registry.json",
+        "sha256": "bfb75b389c15e1151d9bd5c74b57a377993f477bb0a05cd8d36af28eb4c275e1"
+      },
+      {
+        "path_relative_to_project": "stages/03_segmentation/outputs/dino_u10_expanded_fivefold_20261024/folds/fold5/data/registry.json",
+        "sha256": "ad1c633985c718b2021081232bd3a7df899bd1495b209b3b628c4f3c29ddb783"
+      },
+      {
+        "path_relative_to_project": "experiments/restart_ab_fold1_20261029/work/fold1/data/registry.json",
+        "sha256": "784fc438d0c489ebbe00082949d3cbf15aebb5f08aa293c53e32f1b6efa054a5"
+      },
+      {
+        "path_relative_to_project": "reports/u10_four_model_eval_20261029/INBREAST94_COHORT.json",
+        "sha256": "b841be89aad99c2088e6b58fc6a144025ee04e475c41a49cedc4d6744321b08a"
+      }
+    ]
+  }
+}
