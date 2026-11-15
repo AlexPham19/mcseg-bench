@@ -1,0 +1,24 @@
+# Model submission
+
+- Model / adapter version:
+- Track: common recipe / full system / prompt-assisted / oracle diagnostic
+- Source URL + commit + local diff hash:
+- Code/weight/data licenses and access instructions:
+- Pretrained datasets / known overlap / unknown exposure:
+- Dataset + manifest SHA256 + annotation-policy version:
+- Group linkage verified or proxy:
+- Split IDs; training seed(s); separate split seed:
+- Input normalization/polarity/spacing/resolution; tiling/padding/stitching:
+- Architecture; trainable/total parameters; pretrained frozen/unfrozen:
+- Train sampling, augmentations, losses, optimizer, schedule, iterations:
+- Checkpoint criterion + exact selected epoch; dev hyperparameter budget:
+- Hard-negative mining and OOF procedure:
+- Weight file(s) SHA256; pipeline config hash:
+- Threshold lock; no test-selected parameters:
+- Output representation: calibrated probabilities / scores / fixed binary mask:
+- Negative / ignore / unknown-reference handling:
+- Primary metric + supplementary metrics:
+- Hardware; precision; peak VRAM; inference wall time; complete-system latency:
+- Run failures/timeouts; excluded cases and predeclared reasons:
+- Per-image private artifact location; aggregate public artifact:
+- Known limits, failure cases and intended research use:

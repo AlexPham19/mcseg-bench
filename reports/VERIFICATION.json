@@ -1,0 +1,45 @@
+{
+  "checked_at_utc": "2026-11-15T08:02:28.370047+00:00",
+  "status": "passed",
+  "tests": 11,
+  "synthetic_demo": "passed",
+  "cpu_training_smoke": {
+    "epochs": 1,
+    "steps": 2,
+    "batch": 2,
+    "patch": 32,
+    "width": 8,
+    "train_dev_test_prediction_and_dev_lock": "passed",
+    "paired_comparison": "passed"
+  },
+  "extracted_zip_tests": "11 passed; integrity verifier, demo and manifest validator passed",
+  "environment": {
+    "python": "3.13.13",
+    "numpy": "2.5.0",
+    "scipy": "1.18.0",
+    "Pillow": "12.1.1",
+    "torch": "2.7.1+cu118",
+    "platform": "win32"
+  },
+  "medical_data_shipped": false,
+  "medical_cohort_new_training_or_evaluation": false,
+  "model_weights_shipped": false,
+  "gpu_training_tested": false,
+  "code_license": "Repository owner chooses release license; no vendor source copied",
+  "limits": [
+    "No real-data benchmark completed by this starter",
+    "Adapter candidates other than reference U-Net are not bundled",
+    "No verified clinical validation",
+    "Dependency ranges provided; exact tested environment recorded here"
+  ],
+  "release_files_excluding_checksum": 34,
+  "local_document_links": "passed",
+  "english_documentation_update": {
+    "tests": 11,
+    "existing_code_unchanged": true,
+    "metrics_unchanged": true,
+    "local_links": "passed",
+    "pipeline_diagram": "visually reviewed",
+    "new_medical_training": false
+  }
+}
