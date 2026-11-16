@@ -1,8 +1,4 @@
-"""Small plain U-Net reference, independently implemented for this starter.
-
-Not the historical PlainUNet or DinoUNet checkpoint graph. CPU smoke results
-are software checks, not evidence of medical performance.
-"""
+"""Plain U-Net baseline: training and native-coordinate tiled inference."""
 from functools import lru_cache
 from pathlib import Path
 import random

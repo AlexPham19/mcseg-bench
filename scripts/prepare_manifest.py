@@ -1,7 +1,7 @@
 """Convert LOCAL official-repo split CSVs into a private path/hash manifest.
 
 Does not download data, infer patient linkage, certify annotations or re-split.
-Run from the handoff root: python scripts/prepare_manifest.py --help
+Run from the repository root: python scripts/prepare_manifest.py --help
 """
 import argparse
 import csv
