@@ -6,7 +6,7 @@ import sys
 import numpy as np
 
 from .io import manifest, probability, read_json, reference, relative, sha, write_json
-from .metrics import measure, aggregate, bootstrap, paired_comparison
+from .metrics import measure, aggregate, bootstrap
 
 
 def run_metadata(pred_dir, role):
@@ -79,60 +79,10 @@ def evaluate(rows,root,pred_dir,role,lock,path,op,replicates):
                 per_image=measured,environment=dict(python=sys.version,numpy=np.__version__,platform=platform.platform()))
 
 
-def demo(out):
-    import csv
-    import hashlib
-    from scipy import ndimage
-    out = Path(out)
-    if out.exists() and any(out.iterdir()):
-        raise ValueError("Demo output must be new or empty")
-    (out/"images").mkdir(parents=True)
-    (out/"masks").mkdir()
-    rng = np.random.default_rng(42)
-    rows = []
-    # Procedural, nonmedical bright-speck arrays. Test label access here only creates a fixture.
-    for i in range(12):
-        cid = f"synthetic_{i:02}"
-        role = "train" if i<6 else "dev" if i<9 else "test"
-        gt = np.zeros((96,112),np.uint8)
-        if i%3 != 2:
-            gt[20:22,25:27] = 1
-            gt[28:31,31:34] = 1
-            gt[65:69,80:84] = 1
-        im = rng.uniform(.05,.25,gt.shape).astype(np.float32)
-        im += gt*.6
-        im[47:49,52:54] = .72  # bright non-target control
-        np.save(out/"images"/(cid+".npy"),im)
-        np.save(out/"masks"/(cid+".npy"),gt)
-        rows.append(dict(case_id=cid,group_id=f"procedural_group_{i//1:02}",split=role,
-                         image="images/"+cid+".npy",mask="masks/"+cid+".npy",label_status="dense_verified",
-                         image_sha256=sha(out/"images"/(cid+".npy")),mask_sha256=sha(out/"masks"/(cid+".npy"))))
-        if role != "train":
-            pd = out/("pred_"+role)
-            pd.mkdir(exist_ok=True)
-            p = ndimage.gaussian_filter(im,.5).clip(0,1).astype(np.float32)
-            np.save(pd/(cid+".npy"),p)
-    with (out/"manifest.csv").open("w",encoding="utf-8",newline="") as f:
-        writer = csv.DictWriter(f,fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-    model_sha = hashlib.sha256(b"synthetic image-only blur predictor v1").hexdigest()
-    for role in ("dev","test"):
-        write_json(out/("pred_"+role)/"run.json",dict(model_sha256=model_sha,pipeline_id="synthetic_blur_image_only",split=role))
-    lock = calibration(rows,out,out/"pred_dev",out/"manifest.csv")
-    write_json(out/"threshold_lock.json",lock)
-    result = evaluate(rows,out,out/"pred_test","test",lock,out/"manifest.csv","segmentation",100)
-    write_json(out/"test_results.json",result)
-    print("PASS synthetic demo: manifest -> dev threshold lock -> test metrics+group CI")
-
 
 def main():
-    ap = argparse.ArgumentParser(description="MC segmentation benchmark starter; no data download or clinical use")
+    ap = argparse.ArgumentParser(description="Plain U-Net baseline: validate, train, predict, lock, evaluate")
     sub = ap.add_subparsers(dest="command",required=True)
-    p = sub.add_parser("demo"); p.add_argument("--out",required=True,type=Path)
-    p = sub.add_parser("compare")
-    p.add_argument("--a",required=True,type=Path); p.add_argument("--b",required=True,type=Path)
-    p.add_argument("--out",required=True,type=Path); p.add_argument("--bootstrap",type=int,default=2000)
     for command in ("validate","lock","evaluate","train","predict"):
         p = sub.add_parser(command)
         p.add_argument("--manifest",required=True,type=Path)
@@ -156,15 +106,6 @@ def main():
                 p.add_argument("--"+key,type=int,default=default)
             p.add_argument("--lr",type=float,default=.001)
     args = ap.parse_args()
-    if args.command == "demo":
-        demo(args.out)
-        return
-    if args.command == "compare":
-        if args.bootstrap < 0:
-            raise ValueError("bootstrap must be nonnegative")
-        write_json(args.out,paired_comparison(read_json(args.a),read_json(args.b),args.bootstrap))
-        print("Wrote paired group-bootstrap differences B minus A")
-        return
     rows = manifest(args.manifest,args.data_root,check_files=True)
     if args.command == "validate":
         print("PASS manifest IDs/groups/roles/paths/checksums; annotation quality/linkage still require audit")

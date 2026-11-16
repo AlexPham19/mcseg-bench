@@ -1,68 +1,23 @@
-# Microcalcification segmentation benchmark handoff
+# Microcalcification segmentation benchmark
 
-**A runnable starter and proposed evaluation protocol. Real-data benchmarking is not complete.**
+## Benchmark process
 
-This package supports a shared workflow: prepare the data once, train different models against the same split definitions, export native-resolution predictions, and evaluate them with one metric implementation.
-
-The original handoff and repository audit are dated **November 15, 2026**. This edition translates all documentation into English and adds a pipeline guide. It does not change training code, metric definitions, or historical numerical results.
-
-## Data policy: real medical images only
-
-**All official benchmark training, development, calibration, and test inputs must be real medical images from the organizer's audited manifests.** Synthetic lesions, rendered mammograms, procedural objects, and generated synthetic training patches are excluded; there is no synthetic-data benchmark track in this project.
-
-Cropping, flips, and declared intensity normalization of real images are ordinary transformations of real data. They do not introduce generated lesions. Foundation-model pretraining and its data exposure must be declared separately; medical fine-tuning and benchmark evaluation still use only the eligible real images.
-
-The optional procedural demo and unit-test fixtures are software checks only. Their arrays, checkpoints, and scores are excluded from official benchmark fitting, calibration, test cohorts, and result tables.
-
-## Start here
-
-1. [Pipeline guide](docs/PIPELINE.md): the workflow, model inputs/outputs, and implemented versus proposed stages.
-2. [Student quickstart](docs/STUDENT_QUICKSTART.md): executable commands and submission requirements.
-3. [Shared protocol](docs/PROTOCOL.md): splits, labels, operating points, metrics, and statistics.
-4. [Organizer checklist and next steps](NEXT_STEPS.md).
-5. [Model readiness](docs/MODEL_READINESS.md): what can be reused and what still needs an adapter.
-6. [Analysis and research directions](reports/ANALYSIS_AND_NEXT_STEPS.md): historical findings, use cases, and publication paths.
-
-![Benchmark workflow overview](docs/pipeline_overview.png)
-
-The test references enter the **final evaluator only**. Checkpoint and threshold selection use development data. See the pipeline guide for the separate checkpoint-selection and threshold-calibration steps.
-
-## Optional software check: procedural demo outside the benchmark
-
-Python 3.10 or later; Python 3.11 is a suggested setup target. Run these commands from the package root after extraction. The exact environment used for verification is recorded in [VERIFICATION.json](reports/VERIFICATION.json).
-
-```bash
-python -m venv .venv
-# Linux: source .venv/bin/activate
-# Windows PowerShell: .venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m unittest discover -s tests -v
-python -m mcbench demo --out runs/synthetic-demo
+```text
+Real images + reference masks
+    -> fixed patient/group splits
+    -> train the plain U-Net baseline
+    -> select a checkpoint on development data
+    -> lock thresholds on development data
+    -> predict test images with the frozen model
+    -> evaluate with the locked thresholds
+    -> report segmentation, component detection, and false positives
 ```
 
-The demo generates **procedural bright-speck arrays**, calibrates thresholds on development data, and evaluates a synthetic test split. These arrays are not mammograms, and the results provide no evidence of medical performance. Running the demo/evaluator requires no GPU, SSH, pretrained model, patient data, or legacy project checkout.
+1. **Prepare real data.** Use real medical images and audited reference masks only. Crops, flips, and intensity normalization are allowed; generated lesions/images are excluded. Keep related views/exams in the same patient/group partition.
+2. **Use the registered splits.** Start with CSAW-S fold 1: **193 training /44 development images**, model seed **42**. Preserve split membership and split seed **20261024**. The expert set has **26 images**, scored against annotators A and B separately. See [split definitions](splits/README.md).
+3. **Train the baseline.** Fit the plain U-Net on training images/masks. Choose its checkpoint by foreground macro IoU on positive development images at threshold 0.5. Test labels must not select weights.
+4. **Lock operating points.** For the selected checkpoint, search thresholds 0.05–0.95 in steps of 0.05 on development data. Save the best-IoU point and component-recall points under FP/image budgets 0.5,1,2,4,8.
+5. **Evaluate once.** Predict test images at their original resolution and apply the locked model/thresholds. Do not tune on test results. INbreast is evaluation-only; report its 27 contour-reference and 67 assumed-empty images separately.
+6. **Report results.** Include positive-image macro IoU/Dice, pooled pixel precision/recall, component precision/recall, matched/FN/FP counts, FP/image, clean-negative rate, and tiny/regular × isolated/cluster results. Save the manifest, model hash, configuration, threshold lock, and per-image metrics.
 
-The optional reference U-Net trainer requires PyTorch. Install a build appropriate for your hardware and follow the quickstart. This independently implemented U-Net is not the historical PlainUNet or DINO checkpoint architecture.
-
-## What is included?
-
-- Pixel and component metrics; tiny/regular by isolated/cluster subgroups; bounds for subgroup counts when maximum matchings are ambiguous.
-- Split/group/path/hash checks, development-only threshold locking, FP-budget operating points, group bootstrap intervals, and paired comparisons.
-- A reference U-Net trainer and native-coordinate tiled/Hann inference, a manifest converter, and a prediction interface for other models.
-- Analysis of existing CSAW44 aggregate results. No additional real medical-cohort experiment was performed for this handoff or its English documentation update.
-
-Complete nnU-Net, DinoUNet, DeepMiCa, and MedSAM adapters are not bundled. No real-data benchmark or new independent held-out result is claimed.
-
-## Repository and dependencies
-
-Target repository: [AlexPham19/mcseg-bench](https://github.com/AlexPham19/mcseg-bench), audited commit `d7ac04e89e6fbe85165a0c33836f979b9b7d59b9`. That snapshot provides split definitions and a validator. This package independently supplies a starter for the missing execution/evaluation workflow. No changes have been pushed to GitHub.
-
-The package contains no medical images/masks, DICOM files, actual cohort IDs, model checkpoints, credentials, or vendor source. The previously authorized three-case illustration bundle remains a separate deliverable. Obtain datasets, external libraries, and weights under their respective access and license terms.
-
-The starter does not depend on the existing research project or remote server. See [DEPENDENCIES.json](DEPENDENCIES.json), [verification](reports/VERIFICATION.json), and the [English-edition change record](reports/ENGLISH_EDITION.json).
-
-To verify delivered files after extraction:
-
-```bash
-python scripts/verify_integrity.py
-```
+Commands: [Run the baseline](docs/STUDENT_QUICKSTART.md). Definitions and reference limitations: [Evaluation protocol](docs/PROTOCOL.md).

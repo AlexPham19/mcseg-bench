@@ -2,6 +2,9 @@ __pycache__/
 *.py[cod]
 .env
 .env.*
+.venv/
+data/
+runs/
 *.dcm
 *.png
 *.jpg
@@ -15,10 +18,3 @@ __pycache__/
 *.ckpt
 *.zip
 *.tar
-.venv/
-data/
-runs/
-# Public aggregate/workflow illustrations from the benchmark handoff
-!docs/pipeline_overview.png
-!reports/pareto_component_fp.png
-!reports/component_groups.png

@@ -8,8 +8,9 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from mcbench.io import manifest, probability, write_json, reference
-from mcbench.metrics import measure, aggregate, bootstrap, match, count_matches, paired_comparison
-from mcbench.__main__ import demo, evaluate
+from mcbench.metrics import measure, aggregate, bootstrap, count_matches
+from mcbench.__main__ import calibration, evaluate
+from baseline_fixture import make_fixture
 
 
 class ProtocolTests(unittest.TestCase):
@@ -100,11 +101,10 @@ class ProtocolTests(unittest.TestCase):
 
     def test_lock_and_model_guard(self):
         with tempfile.TemporaryDirectory() as d:
-            root=Path(d)/"demo"
-            demo(root)
-            import json
-            lock=json.loads((root/"threshold_lock.json").read_text())
+            root=Path(d)/"fixture"
+            make_fixture(root)
             rows=manifest(root/"manifest.csv",root,True)
+            lock=calibration(rows,root,root/"pred_dev",root/"manifest.csv")
             results=evaluate(rows,root,root/"pred_test","test",lock,root/"manifest.csv","segmentation",10)
             self.assertEqual(results["primary"]["images"],3)
             write_json(root/"pred_test"/"run.json",dict(model_sha256="a"*64,pipeline_id=lock["pipeline_id"],split="test"))
@@ -122,20 +122,6 @@ class ProtocolTests(unittest.TestCase):
         ci=bootstrap([a,a,b],50)
         self.assertEqual(ci["groups"],2)
         self.assertEqual(ci["intervals"]["positive_macro_iou"]["valid_replicates"],50)
-
-    def test_paired_comparison_and_mismatched_cohort(self):
-        x=np.eye(3,dtype=bool)
-        rows_a=[dict(case_id=f"case{i}",group_id=f"p{i}",label_status="dense_verified",**measure(x,np.zeros_like(x))) for i in range(3)]
-        rows_b=[dict(case_id=f"case{i}",group_id=f"p{i}",label_status="dense_verified",**measure(x,x)) for i in range(3)]
-        a=dict(manifest_sha256="x",split="test",per_image=rows_a)
-        b=dict(manifest_sha256="x",split="test",per_image=rows_b)
-        result=paired_comparison(a,b,20)
-        self.assertEqual(result["difference"]["positive_macro_iou"],1.)
-        self.assertEqual(result["ci"]["component_recall"]["low"],1.)
-        b["per_image"]=rows_b[:-1]
-        with self.assertRaises(ValueError):
-            paired_comparison(a,b,20)
-
 
 if __name__ == "__main__":
     unittest.main()

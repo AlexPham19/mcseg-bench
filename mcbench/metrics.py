@@ -120,31 +120,3 @@ def bootstrap(rows, n=2000, seed=42):
                 values[key].append(stats[key])
     return dict(method="percentile group bootstrap", groups=len(groups), replicates=n, seed=seed,
                 intervals={key: dict(low=float(np.quantile(v, .025)), high=float(np.quantile(v, .975)), valid_replicates=len(v)) if v else None for key, v in values.items()})
-
-
-def paired_comparison(a, b, n=2000, seed=42):
-    """Paired group bootstrap, differences B minus A, one run/seed pair only."""
-    if a["manifest_sha256"] != b["manifest_sha256"] or a["split"] != b["split"]:
-        raise ValueError("Paired comparison requires the same manifest and split")
-    ra = {r["case_id"]:r for r in a["per_image"] if r["label_status"] == "dense_verified"}
-    rb = {r["case_id"]:r for r in b["per_image"] if r["label_status"] == "dense_verified"}
-    if not ra or ra.keys() != rb.keys() or any(ra[k]["group_id"] != rb[k]["group_id"] for k in ra):
-        raise ValueError("Paired primary cases/groups must agree exactly")
-    groups = sorted({r["group_id"] for r in ra.values()})
-    bygroup = {g:sorted(k for k in ra if ra[k]["group_id"]==g) for g in groups}
-    keys = ("positive_macro_iou","positive_macro_dice","component_recall","component_precision","fp_per_image")
-    def differences(ids):
-        sa,sb = aggregate([ra[k] for k in ids]),aggregate([rb[k] for k in ids])
-        return {k:sb[k]-sa[k] if sa[k] is not None and sb[k] is not None else None for k in keys}
-    point = differences(sorted(ra))
-    samples = {k:[] for k in keys}
-    rng = np.random.default_rng(seed)
-    if len(groups)>1:
-        for _ in range(n):
-            delta = differences([cid for g in rng.choice(groups,len(groups),replace=True) for cid in bygroup[g]])
-            for k in keys:
-                if delta[k] is not None:
-                    samples[k].append(delta[k])
-    return dict(direction="B minus A",groups=len(groups),images=len(ra),seed=seed,replicates=n,
-                difference=point,ci={k:dict(low=float(np.quantile(v,.025)),high=float(np.quantile(v,.975)),valid_replicates=len(v)) if v else None for k,v in samples.items()},
-                note="Paired supplied-group percentile bootstrap for one run pair; no multiplicity correction or multi-seed hierarchy.")
