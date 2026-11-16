@@ -28,5 +28,11 @@
   "documentation_link_check": "passed",
   "fresh_archive_check": "passed: extraction, checksum verification, synthetic demo",
   "tests": 11,
-  "pipeline_figure_visually_reviewed": true
+  "pipeline_figure_visually_reviewed": true,
+  "real_image_scope_clarification": {
+    "updated_at_utc": "2026-11-16T00:29:27.575934+00:00",
+    "official_benchmark": "real medical images only",
+    "procedural_fixtures": "software verification only",
+    "new_real_medical_training_or_evaluation": false
+  }
 }

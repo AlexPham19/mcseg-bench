@@ -6,6 +6,14 @@ This package supports a shared workflow: prepare the data once, train different 
 
 The original handoff and repository audit are dated **November 15, 2026**. This edition translates all documentation into English and adds a pipeline guide. It does not change training code, metric definitions, or historical numerical results.
 
+## Data policy: real medical images only
+
+**All official benchmark training, development, calibration, and test inputs must be real medical images from the organizer's audited manifests.** Synthetic lesions, rendered mammograms, procedural objects, and generated synthetic training patches are excluded; there is no synthetic-data benchmark track in this project.
+
+Cropping, flips, and declared intensity normalization of real images are ordinary transformations of real data. They do not introduce generated lesions. Foundation-model pretraining and its data exposure must be declared separately; medical fine-tuning and benchmark evaluation still use only the eligible real images.
+
+The optional procedural demo and unit-test fixtures are software checks only. Their arrays, checkpoints, and scores are excluded from official benchmark fitting, calibration, test cohorts, and result tables.
+
 ## Start here
 
 1. [Pipeline guide](docs/PIPELINE.md): the workflow, model inputs/outputs, and implemented versus proposed stages.
@@ -19,7 +27,7 @@ The original handoff and repository audit are dated **November 15, 2026**. This 
 
 The test references enter the **final evaluator only**. Checkpoint and threshold selection use development data. See the pipeline guide for the separate checkpoint-selection and threshold-calibration steps.
 
-## Quick start with synthetic data
+## Optional software check: procedural demo outside the benchmark
 
 Python 3.10 or later; Python 3.11 is a suggested setup target. Run these commands from the package root after extraction. The exact environment used for verification is recorded in [VERIFICATION.json](reports/VERIFICATION.json).
 

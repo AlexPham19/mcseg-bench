@@ -5,6 +5,9 @@
 - Source URL + commit + local diff hash:
 - Code/weight/data licenses and access instructions:
 - Pretrained datasets / known overlap / unknown exposure:
+- Benchmark data origin: real medical images only; dataset/provider and source traceability:
+- Generated/synthetic medical training examples used: none (required for this benchmark):
+- Allowed transformations of real images:
 - Dataset + manifest SHA256 + annotation-policy version:
 - Group linkage verified or proxy:
 - Split IDs; training seed(s); separate split seed:

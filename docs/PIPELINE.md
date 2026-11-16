@@ -2,6 +2,14 @@
 
 This guide explains the benchmark workflow, the bundled reference model, and the historical research systems. **Only the reference U-Net and shared evaluation workflow are implemented in this starter.** Other model adapters and the component-verifier/refiner proposal require additional work.
 
+## Data policy: real medical images only
+
+**All official benchmark training, development, calibration, and test inputs must be real medical images from the organizer's audited manifests.** Synthetic lesions, rendered mammograms, procedural objects, and generated synthetic training patches are excluded; there is no synthetic-data benchmark track in this project.
+
+Cropping, flips, and declared intensity normalization of real images are ordinary transformations of real data. They do not introduce generated lesions. Foundation-model pretraining and its data exposure must be declared separately; medical fine-tuning and benchmark evaluation still use only the eligible real images.
+
+The optional procedural demo and unit-test fixtures are software checks only. Their arrays, checkpoints, and scores are excluded from official benchmark fitting, calibration, test cohorts, and result tables.
+
 ## 1. The workflow in one view
 
 ![Benchmark workflow](pipeline_overview.png)

@@ -22,7 +22,7 @@ ax.text(.03, .965, "Microcalcification benchmark: shared execution pipeline", fo
 ax.text(.03, .926, "Fit on TRAIN. Select and calibrate on DEV. Apply the frozen decisions to TEST.", fontsize=12, color="#4d627b")
 
 rows = [
-    ("1  PREPARE", "Organizer", "#e8eef8", ["Source images\nand binary references", "Audit labels\nand patient/group linkage", "Preserve registered\ntrain / dev / test split", "Freeze manifest\npaths + SHA256 hashes"]),
+    ("1  PREPARE", "Organizer", "#e8eef8", ["Real mammograms\nand binary references", "Audit labels\nand patient/group linkage", "Preserve registered\ntrain / dev / test split", "Freeze manifest\npaths + SHA256 hashes"]),
     ("2  TRAIN", "Model runner", "#e6f3ec", ["TRAIN image/mask\npatches", "Fit reference U-Net\nBCE + soft Dice", "DEV IoU at 0.5\nselect checkpoint", "Frozen checkpoint\nmodel.pt"]),
     ("3  CALIBRATE", "Development only", "#fff1d9", ["DEV images", "Frozen model\nnative probability maps", "DEV GT + fixed grid\nchoose operating points", "Threshold lock\nthreshold_lock.json"]),
     ("4  PREDICT", "No test-label tuning", "#e8f1fb", ["TEST images", "Same frozen model\nnative probability maps", "Apply locked\noperating point", "Native-coordinate\nbinary prediction"]),
