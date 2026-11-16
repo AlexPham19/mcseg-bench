@@ -6,6 +6,8 @@ CSAW44 has already been used repeatedly for threshold selection. Further improve
 
 ## Organizer setup: do this once
 
+**Real-image-only scope:** all official fitting/development/calibration/test inputs must be real medical images. Exclude generated lesions, rendered/procedural mammograms, and synthetic medical training patches. Keep software-demo fixtures and their scores outside the study.
+
 1. **P0 — establish label meaning.** Record the source-class mapping, whether annotations describe individual specks or larger regions, which areas are exhaustively annotated, and which negatives have been checked. The CSAW-S paper concerns mammographic tumor segmentation; the dataset name alone does not certify that the project's masks delineate individual MC specks. Trace the actual masks being used. Do not assign `dense_verified` merely to make the code run.
 2. **P0 — freeze data and access conditions.** Obtain data from the provider; version preprocessing and SHA256 hashes; inspect orientation, spacing, patient linkage, and sharing permissions. Keep the INbreast67 subset as `assumed_empty`, not verified MC-free or cancer-free images.
 3. **P0 — preserve published split membership.** Start with fold 1: 193 training /44 development images and model seed 42. The split seed remains20261024. Evaluate expert annotators A/B separately. Audit prior inspection of expert data; if it informed development, disclose that and obtain a new test set for confirmatory claims.

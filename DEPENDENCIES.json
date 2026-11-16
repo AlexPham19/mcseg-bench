@@ -28,5 +28,7 @@
   "evidence_dependency_only": true,
   "safe_removal": "This new handoff folder can be removed independently after export; it does not modify or register training jobs in the existing project.",
   "release_status": "Draft independent code; repository owner must select a license before public release. No upstream vendor code copied.",
-  "documentation_edition": "English, with pipeline guide and static overview"
+  "documentation_edition": "English, with pipeline guide and static overview",
+  "benchmark_data_policy": "Real medical images only for fitting/development/calibration/testing; no generated synthetic medical training examples",
+  "procedural_demo_scope": "Software checks only; excluded from official benchmark data, checkpoints and score tables"
 }

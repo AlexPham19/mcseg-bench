@@ -14,6 +14,14 @@ Freeze the protocol version, source commit, data hashes, and reference policy be
 - **R2:** retrain a public implementation under this benchmark's data/protocol.
 - **R3:** reproduce the original paper's results, requiring its data/splits/recipe/weights and access conditions. R1/R2 do not establish R3, and public code alone does not guarantee100% reproduction.
 
+## Data policy: real medical images only
+
+**All official benchmark training, development, calibration, and test inputs must be real medical images from the organizer's audited manifests.** Synthetic lesions, rendered mammograms, procedural objects, and generated synthetic training patches are excluded; there is no synthetic-data benchmark track in this project.
+
+Cropping, flips, and declared intensity normalization of real images are ordinary transformations of real data. They do not introduce generated lesions. Foundation-model pretraining and its data exposure must be declared separately; medical fine-tuning and benchmark evaluation still use only the eligible real images.
+
+The optional procedural demo and unit-test fixtures are software checks only. Their arrays, checkpoints, and scores are excluded from official benchmark fitting, calibration, test cohorts, and result tables.
+
 ## 2. Development and confirmatory phases
 
 | Phase | Data and seeds | Purpose | Permitted interpretation |
@@ -23,7 +31,7 @@ Freeze the protocol version, source commit, data hashes, and reference policy be
 
 The upstream **split seed is20261024**. Model seed 42 controls initialization/training, not partition membership. Other folds have185/52,194/43,189/48, and 187/50 training/development images. Preserve membership and hashes rather than regenerating partitions from the seed.
 
-The 237-image development pool contains 115 supplied groups. Keep all related views/exams from the same patient together when linkage permits. A supplied group/proxy is not independently verified clinical patient linkage. Prevent patches or images from crossing roles. Fit dataset statistics, hard-negative mining, and synthetic-generation resources using training data only. Declared deterministic per-image normalization is an inference operation, distinct from fitting statistics on the test cohort.
+The 237-image development pool contains 115 supplied groups. Keep all related views/exams from the same patient together when linkage permits. A supplied group/proxy is not independently verified clinical patient linkage. Prevent patches or images from crossing roles. Fit dataset statistics and mine hard negatives using eligible real training data only. Declared deterministic per-image normalization is an inference operation, distinct from fitting statistics on the test cohort.
 
 **CSAW44 has repeatedly informed optimization.** It is development data, not a held-out leaderboard. The expert set contains 26 images/23 supplied groups with annotators A/B on the same images. Score the references separately; they are not52 independent images. Audit prior expert-data inspection. If it informed development, disclose that and seek new data for confirmatory testing. Renaming or reshuffling inspected data does not restore an untouched test.
 
@@ -59,7 +67,7 @@ The starter does not establish annotation correctness, clinical linkage, data pe
 
 **Separate prompt-assisted track.** Fix prompt source/count and interaction cost for MedSAM. GT-derived boxes belong to an oracle track. Automatic prompting must come from a detector trained on eligible training data, with its missed proposals included in end-to-end evaluation.
 
-Declare additional synthetic/external training data in a separate track or explicit column. Record generation resources and prevent leakage. A foundation encoder alone is not an MC segmentor without a trained prediction head.
+Synthetic medical training data are outside this benchmark and must not be introduced as another track. Any additional real training cohort requires organizer approval and an explicit declaration that preserves the registered comparison conditions. Declare foundation-model pretraining separately. A foundation encoder alone is not an MC segmentor without a trained prediction head.
 
 ## 5. Training, checkpoint selection, and threshold calibration
 

@@ -29,6 +29,10 @@ The related `deepmica_image_only_preprocessing_20261023` includes `RETIRED_20261
 
 Recommendation: use that source as an implementation reference for full-system adapters, then repin dependencies and qualify them against the new manifest. Do not launch its controller by default or substitute results from its different split into the new leaderboard. This package does not copy vendor source or depend on the old server.
 
+## Real-image eligibility
+
+Official benchmark fitting, development, calibration, and test inputs must be real medical images from the audited manifests. Public code or a historical score does not establish eligibility. If a checkpoint's medical training data origin is unknown or includes synthetic medical examples, audit its provenance or retrain on the frozen real-image split before treating it as a compliant benchmark entry. Foundation pretraining is declared separately.
+
 ## Suggested assignments
 
 **Round 1:** plain U-Net, nnU-Net2D, and DINO-U-Net: scratch control, strong self-configuring baseline, and foundation-feature baseline.

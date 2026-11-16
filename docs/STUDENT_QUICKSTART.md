@@ -1,6 +1,6 @@
 # Model runner quickstart
 
-## A. Run the demo before requesting data or a GPU
+## A. Optional software check, separate from the real-image benchmark
 
 Use Python 3.10+ and run commands from the package root:
 
@@ -9,6 +9,8 @@ python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 python -m mcbench demo --out runs/demo
 ```
+
+Official benchmark training/development/test data must be real medical images. Start the real-data setup in section B; the demo below is an optional software check and supplies no benchmark training examples or eligible results.
 
 The demo creates procedural bright-speck arrays, `manifest.csv`, `threshold_lock.json`, and `test_results.json`. No mammograms are included. `primary` contains metrics on `dense_verified` references, `per_image` supports auditing, and `ci` bootstraps supplied groups.
 
