@@ -7,6 +7,7 @@ import time
 import numpy as np
 
 from .io import array, relative, reference, sha, write_json
+from .settings import DEFAULTS
 
 
 def normalize(image):
@@ -14,19 +15,19 @@ def normalize(image):
     values = x[x > 0]
     if not len(values):
         return np.zeros_like(x)
-    lo, hi = np.percentile(values, (1, 99.5))
+    lo, hi = np.percentile(values, DEFAULTS.normalization_percentiles, method="linear")
     if hi <= lo:
         return np.zeros_like(x)
     return np.clip((x-lo)/(hi-lo), 0, 1).astype(np.float32)
 
 
-def make_model(width=16):
+def make_model(width=DEFAULTS.width):
     import torch
     from torch import nn
     class Block(nn.Sequential):
         def __init__(self, a, b):
-            super().__init__(nn.Conv2d(a,b,3,padding=1), nn.GroupNorm(4,b), nn.ReLU(),
-                             nn.Conv2d(b,b,3,padding=1), nn.GroupNorm(4,b), nn.ReLU())
+            super().__init__(nn.Conv2d(a,b,3,padding=1), nn.GroupNorm(DEFAULTS.group_norm_groups,b), nn.ReLU(),
+                             nn.Conv2d(b,b,3,padding=1), nn.GroupNorm(DEFAULTS.group_norm_groups,b), nn.ReLU())
     class UNet(nn.Module):
         def __init__(self):
             super().__init__()
@@ -46,8 +47,9 @@ def positions(length, patch, stride):
     return sorted(set(list(range(0, max(1, length-patch+1), stride)) + [max(0,length-patch)]))
 
 
-def tiled(model, image, device, patch=256, stride=128, batch=8):
+def tiled(model, image, device, patch=DEFAULTS.patch, stride=None, batch=DEFAULTS.inference_batch):
     import torch
+    stride = max(1, patch//2) if stride is None else stride
     if patch < 8 or not 0 < stride <= patch:
         raise ValueError("Require patch>=8 and 0<stride<=patch")
     x = normalize(image)
@@ -55,7 +57,7 @@ def tiled(model, image, device, patch=256, stride=128, batch=8):
     padded = np.pad(x, ((0,max(0,patch-h)),(0,max(0,patch-w))),mode="edge")
     coords = [(y,z) for y in positions(padded.shape[0],patch,stride) for z in positions(padded.shape[1],patch,stride)]
     # Positive window floor ensures edge pixels never receive zero total weight.
-    window = np.maximum(np.outer(np.hanning(patch),np.hanning(patch)), 1e-3).astype(np.float32)
+    window = np.maximum(np.outer(np.hanning(patch),np.hanning(patch)), DEFAULTS.hann_weight_floor).astype(np.float32)
     total, weight = np.zeros_like(padded), np.zeros_like(padded)
     model.eval()
     with torch.inference_mode():
@@ -69,7 +71,8 @@ def tiled(model, image, device, patch=256, stride=128, batch=8):
     return (total/weight)[:h,:w].astype(np.float32)
 
 
-def train(rows, root, output, seed=42, epochs=50, steps=128, batch=4, patch=256, width=16, lr=.001, device="cpu"):
+def train(rows, root, output, seed=DEFAULTS.seed, epochs=DEFAULTS.epochs, steps=DEFAULTS.steps,
+          batch=DEFAULTS.batch, patch=DEFAULTS.patch, width=DEFAULTS.width, lr=DEFAULTS.lr, device="cpu"):
     import torch
     from .metrics import measure, aggregate
     out = Path(output)
@@ -90,7 +93,8 @@ def train(rows, root, output, seed=42, epochs=50, steps=128, batch=4, patch=256,
     torch.set_num_threads(min(4, torch.get_num_threads()))
     rng = np.random.default_rng(seed)
     model = make_model(width).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=DEFAULTS.weight_decay,
+                                 betas=DEFAULTS.adam_betas, eps=DEFAULTS.adam_eps, amsgrad=DEFAULTS.adam_amsgrad)
     out.mkdir(parents=True,exist_ok=True)
     @lru_cache(maxsize=4)
     def load(cid):
@@ -103,7 +107,7 @@ def train(rows, root, output, seed=42, epochs=50, steps=128, batch=4, patch=256,
         row = fitting[int(rng.integers(len(fitting)))]
         im,gt,points = load(row["case_id"])
         h,w = im.shape
-        if len(points) and rng.random() < .5:
+        if len(points) and rng.random() < DEFAULTS.positive_crop_probability:
             cy,cx = points[int(rng.integers(len(points)))]
             y,x = cy-patch//2+int(rng.integers(-patch//4,patch//4+1)),cx-patch//2+int(rng.integers(-patch//4,patch//4+1))
         else:
@@ -112,9 +116,9 @@ def train(rows, root, output, seed=42, epochs=50, steps=128, batch=4, patch=256,
         image,mask = im[y:y+patch,x:x+patch],gt[y:y+patch,x:x+patch]
         pads = ((0,patch-image.shape[0]),(0,patch-image.shape[1]))
         image,mask = np.pad(image,pads,mode="edge"),np.pad(mask,pads)
-        if rng.random() < .5:
+        if rng.random() < DEFAULTS.flip_probability:
             image,mask = image[:,::-1],mask[:,::-1]
-        if rng.random() < .5:
+        if rng.random() < DEFAULTS.flip_probability:
             image,mask = image[::-1],mask[::-1]
         return image.copy(),mask.astype(np.float32).copy()
     history, best = [], -1.
@@ -129,7 +133,7 @@ def train(rows, root, output, seed=42, epochs=50, steps=128, batch=4, patch=256,
             optimizer.zero_grad(set_to_none=True)
             logits = model(images)
             p = logits.sigmoid()
-            dice = (2*(p*masks).sum((1,2,3))+1)/(p.sum((1,2,3))+masks.sum((1,2,3))+1)
+            dice = (2*(p*masks).sum((1,2,3))+DEFAULTS.dice_smoothing)/(p.sum((1,2,3))+masks.sum((1,2,3))+DEFAULTS.dice_smoothing)
             loss = torch.nn.functional.binary_cross_entropy_with_logits(logits,masks) + (1-dice).mean()
             loss.backward()
             optimizer.step()
@@ -138,7 +142,7 @@ def train(rows, root, output, seed=42, epochs=50, steps=128, batch=4, patch=256,
         for row in dev:
             im,gt = array(relative(root,row["image"])),reference(row,root)
             prob = tiled(model,im,device,patch,max(1,patch//2))
-            evaluated.append(measure(gt,prob >= .5))
+            evaluated.append(measure(gt,prob >= DEFAULTS.checkpoint_threshold))
         score = aggregate(evaluated)["positive_macro_iou"]
         if score is None:
             raise ValueError("Need a positive dev reference for checkpoint selection")
@@ -147,8 +151,12 @@ def train(rows, root, output, seed=42, epochs=50, steps=128, batch=4, patch=256,
             best = score
             torch.save(dict(state=model.state_dict(),width=width,patch=patch,epoch=epoch),out/"model.pt")
         print(f"epoch={epoch} loss={history[-1]['train_loss']:.5f} devIoU={score:.5f}",flush=True)
+    resolved = dict(DEFAULTS.to_dict(), seed=seed, epochs=epochs, steps=steps, batch=batch, patch=patch, width=width, lr=lr)
     write_json(out/"training.json",dict(seed=seed,epochs=epochs,steps=steps,batch=batch,patch=patch,width=width,lr=lr,
-               preprocessing="per-image positive-pixel percentiles 1,99.5, no resizing",loss="BCE + soft Dice equal coefficients",
+               resolved_settings=resolved, optimizer="AdamW", lr_schedule="constant", precision="float32; no AMP",
+               inference_stride=max(1,patch//2), gradient_accumulation=1,
+               preprocessing="per-image percentiles 1,99.5 over input intensities >0, before cropping; clip to [0,1]; no resizing",
+               loss="mean BCE-with-logits + mean per-patch soft Dice loss, coefficients 1:1, smoothing 1",
                checkpoint_selection="max dev foreground macro IoU at0.5; earliest tie",history=history,
                checkpoint_sha256=sha(out/"model.pt"),torch_version=torch.__version__,numpy_version=np.__version__,
                device=device,seconds=time.time()-started,train_images=len(fitting),dev_images=len(dev)))
@@ -171,4 +179,9 @@ def predict(rows,root,checkpoint,out,split,device="cpu"):
         p = tiled(model,array(relative(root,row["image"])),device,state["patch"],max(1,state["patch"]//2))
         np.save(out/(row["case_id"]+".npy"),p,allow_pickle=False)
     write_json(out/"run.json",dict(model_sha256=sha(checkpoint),pipeline_id="reference_unet_v1_perimage_p1_99.5_hann_halfstride",
-                                  split=split,patch=state["patch"],device=device))
+                                  split=split,patch=state["patch"],device=device,
+                                  inference_batch=DEFAULTS.inference_batch,stride=max(1,state["patch"]//2),
+                                  normalization=dict(percentiles=DEFAULTS.normalization_percentiles,
+                                                     statistics_pixels="input intensity >0; not GT-selected",scope="whole image before tiling",
+                                                     clip=[0,1],resize=False),
+                                  stitching="Hann-weighted probability averaging",hann_weight_floor=DEFAULTS.hann_weight_floor))

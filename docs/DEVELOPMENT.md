@@ -4,6 +4,7 @@ The runtime contains one model: the plain U-Net in `mcbench/baseline.py`. Other 
 
 ```text
 mcbench/baseline.py       U-Net, patch sampling, training, tiled inference
+mcbench/settings.py       Canonical defaults, shared by CLI and runtime
 mcbench/io.py             manifest/reference/probability validation
 mcbench/metrics.py        pixel/component metrics, group bootstrap
 mcbench/__main__.py       validate, train, predict, lock, evaluate

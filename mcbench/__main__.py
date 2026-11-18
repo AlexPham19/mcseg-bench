@@ -7,6 +7,7 @@ import numpy as np
 
 from .io import manifest, probability, read_json, reference, relative, sha, write_json
 from .metrics import measure, aggregate, bootstrap
+from .settings import DEFAULTS
 
 
 def run_metadata(pred_dir, role):
@@ -38,14 +39,14 @@ def calibration(rows,root,pred_dir,manifest_path):
     if not dev or any(r["label_status"] != "dense_verified" for r in dev):
         raise ValueError("Threshold calibration requires audited dense_verified dev references")
     points = []
-    for t in np.round(np.arange(.05,.951,.05),2):
+    for t in np.round(np.arange(DEFAULTS.threshold_min,DEFAULTS.threshold_max+DEFAULTS.threshold_step/2,DEFAULTS.threshold_step),2):
         points.append(dict(threshold=float(t),**aggregate(score(rows,root,pred_dir,"dev",t))))
     valid = [p for p in points if p["positive_macro_iou"] is not None]
     if not valid:
         raise ValueError("Need positive dev images")
     segmentation = max(valid,key=lambda p:(p["positive_macro_iou"],p["component_recall"],-p["fp_per_image"],p["threshold"]))
     operating = {"segmentation": dict(status="feasible",threshold=segmentation["threshold"],dev=segmentation)}
-    for budget in (.5,1,2,4,8):
+    for budget in DEFAULTS.fp_budgets:
         eligible = [p for p in valid if p["fp_per_image"] <= budget]
         best = max(eligible,key=lambda p:(p["component_recall"],-p["fp_per_image"],p["positive_macro_iou"],p["threshold"])) if eligible else None
         operating[f"cad_fp{budget:g}"] = dict(status="feasible" if best else "infeasible",threshold=best["threshold"] if best else None,dev=best,budget_fp_per_image=budget)
@@ -84,7 +85,7 @@ def main():
     ap = argparse.ArgumentParser(description="Plain U-Net baseline: validate, train, predict, lock, evaluate")
     sub = ap.add_subparsers(dest="command",required=True)
     for command in ("validate","lock","evaluate","train","predict"):
-        p = sub.add_parser(command)
+        p = sub.add_parser(command, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         p.add_argument("--manifest",required=True,type=Path)
         p.add_argument("--data-root",required=True,type=Path)
         if command in ("lock","evaluate"):
@@ -102,9 +103,10 @@ def main():
         if command == "predict":
             p.add_argument("--checkpoint",required=True,type=Path)
         if command == "train":
-            for key,default in (("seed",42),("epochs",50),("steps",128),("batch",4),("patch",256),("width",16)):
-                p.add_argument("--"+key,type=int,default=default)
-            p.add_argument("--lr",type=float,default=.001)
+            for key in ("seed","epochs","steps","batch","patch","width"):
+                help_text = "Training patches per optimizer update (inference tiles use batch8)" if key=="batch" else "Baseline "+key
+                p.add_argument("--"+key,type=int,default=getattr(DEFAULTS,key),help=help_text)
+            p.add_argument("--lr",type=float,default=DEFAULTS.lr,help="Constant AdamW learning rate")
     args = ap.parse_args()
     rows = manifest(args.manifest,args.data_root,check_files=True)
     if args.command == "validate":
