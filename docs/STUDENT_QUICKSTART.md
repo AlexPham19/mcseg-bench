@@ -1,6 +1,6 @@
 # Run the plain U-Net baseline
 
-Run from the repository root with Python 3.10+ and new output directories.
+Run from the repository root with Python 3.10+ and new output directories. Use the [final baseline settings](BASELINE_SETTINGS.md); executable defaults live in `mcbench/settings.py`.
 
 ## 1. Install
 
@@ -30,7 +30,7 @@ For testing, include test rows in the same frozen manifest **before training/cal
 ## 3. Train and select a checkpoint
 
 ```bash
-python -m mcbench train --manifest data/fold1.csv --data-root data/csaw --out runs/unet42 --seed 42 --epochs 50 --steps 128 --batch 4 --patch 256 --device cuda:0
+python -m mcbench train --manifest data/fold1.csv --data-root data/csaw --out runs/unet42 --device cuda:0
 ```
 
 Use `--device cpu` for CPU execution. `model.pt` is selected by development foreground IoU at 0.5; `training.json` records configuration, history, and fingerprints. This plain U-Net trains from scratch. Test references do not select weights.
@@ -42,7 +42,7 @@ python -m mcbench predict --manifest data/fold1.csv --data-root data/csaw --chec
 python -m mcbench lock --manifest data/fold1.csv --data-root data/csaw --pred runs/unet42-dev --out runs/unet42-lock.json
 ```
 
-The lock saves the best-IoU threshold and feasible FP-budget operating points for the fixed checkpoint. Do not replace it after viewing test results.
+Training uses the canonical defaults (batch 4); prediction uses 8 tiles per forward pass and 128-pixel stride for 256-pixel tiles. Inspect defaults with `python -m mcbench train --help` and actual run values in `training.json`. The lock saves the best-IoU threshold and feasible FP-budget operating points for the fixed checkpoint. Do not replace it after viewing test results.
 
 ## 5. Predict and evaluate test images
 

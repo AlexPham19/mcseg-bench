@@ -29,13 +29,9 @@ Use consistent binary0/1 or0/255 masks in original image coordinates. Audit igno
 
 ## Plain U-Net baseline
 
-The only model is an independently implemented two-downsampling-level U-Net: two 3×3 convolutions per block, GroupNorm/ReLU, skip concatenation, bilinear upsampling, and a 1×1 foreground head. Base width 16; no pretrained encoder.
+The only model is the plain U-Net trained from scratch. The complete recipe is defined in [BASELINE_SETTINGS.md](BASELINE_SETTINGS.md), backed by executable defaults in [settings.py](../mcbench/settings.py).
 
-Default recipe:256×256 patches,50 epochs ×128 optimizer steps, batch 4, AdamW lr 1e-3, equally weighted BCE-with-logits + soft Dice, horizontal/vertical flips. Select images uniformly; if an image has GT, choose a GT-pixel-centered crop with probability0.5, otherwise a uniform crop. This is not component-balanced sampling.
-
-Normalize using the first/99.5th percentiles of each image's intensities>0 and clip to [0,1]; intensity selection does not use GT. Inference preserves native coordinates using overlapping tiles, half-patch stride, Hann stitching with a positive weight floor, and removal of padding.
-
-Select the highest development positive-image foreground macro IoU at threshold 0.5; retain the earliest epoch on ties. This is a starting recipe, not an established optimum or medical-performance claim.
+Training batch 4 and inference batch 8 are different settings. Percentile input normalization is separate from network GroupNorm. The 50 x128 budget means 6,400 optimizer updates, not 50 dataset passes. Checkpoint selection at 0.5 precedes final development threshold calibration.
 
 ## Operating-point lock
 

@@ -20,4 +20,4 @@ Real images + reference masks
 5. **Evaluate once.** Predict test images at their original resolution and apply the locked model/thresholds. Do not tune on test results. INbreast is evaluation-only; report its 27 contour-reference and 67 assumed-empty images separately.
 6. **Report results.** Include positive-image macro IoU/Dice, pooled pixel precision/recall, component precision/recall, matched/FN/FP counts, FP/image, clean-negative rate, and tiny/regular × isolated/cluster results. Save the manifest, model hash, configuration, threshold lock, and per-image metrics.
 
-Commands: [Run the baseline](docs/STUDENT_QUICKSTART.md). Definitions and reference limitations: [Evaluation protocol](docs/PROTOCOL.md).
+Commands: [Run the baseline](docs/STUDENT_QUICKSTART.md). Recipe: [Final baseline settings](docs/BASELINE_SETTINGS.md). Definitions and reference limitations: [Evaluation protocol](docs/PROTOCOL.md).
